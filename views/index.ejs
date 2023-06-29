@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="description"
+      content="Descubre nuevas peliculas y series gracias a nuestros filtros!"
+    />
+    <meta name="keywords" content="Movie, Hunter, MovieHunter,Series,Filter" />
+    <meta name="author" content="Diego Vidal" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--CSS-->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="/css/index.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <title>Movie Hunter</title>
+  </head>
+
+  <body class="dark">
+    <div class="container">
+      <div id="divDownloadButton"></div>
+
+      <div>
+        <div class="col-12">
+          <a href="/">
+            <h1 class="titulo">Movie Hunter</h1>
+          </a>
+        </div>
+        <div id="icons" class="row">
+          <div class="col-3 mb-1">
+            <input
+              type="button"
+              id="darkModeButton"
+              onclick="changeColors(this)"
+              class="btn btn-warning"
+              value="☀"
+            />
+          </div>
+          <div class="col-sm-7 col-6"></div>
+          <div class="col-sm-2 col-3 mb-1">
+            <select
+              id="languages"
+              onchange="changeLanguage(this)"
+              class="form-select"
+            >
+              <option value="es">🇪🇸</option>
+              <option value="en">🇬🇧</option>
+              <option value="de">🇩🇪</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <form
+        action="/results"
+        class="dark rounded p-3"
+        id="formBusqueda"
+        method="POST"
+        autocomplete="off"
+      >
+        <input
+          type="text"
+          id="genres"
+          value="<%=datos.genres%>"
+          class="d-none"
+        />
+        <input
+          id="language"
+          class="d-none"
+          name="language"
+          value="<%=datos.language%>"
+        />
+        <input type="checkbox" class="d-none" id="darkMode" name="darkMode"
+        <%=(!datos.darkMode ||datos.darkMode=='on' ) ?'checked':''%> />
+        <input
+          type="number"
+          id="pageNumber"
+          name="pageNumber"
+          class="d-none"
+          value="<%=resMovie.page%>"
+        />
+        <input
+          type="number"
+          id="totalPages"
+          name="totalPages"
+          class="d-none"
+          value="<%=resMovie.total_pages
+            %>"
+          disabled
+        />
+        <div class="row p-3">
+          <h2 id="basic_data">Datos básicos</h2>
+          <div class="form-group col-md-12 col-lg-4">
+            <label
+              for="title"
+              data-bs-toggle="tooltip"
+              data-bs-title="Este filtro funciona independientemente de los demás filtros. Si rellena este campo, no se aplicarán los demás filtros (excepto el filtro 'Tipo')."
+              >Título&#42;</label
+            >
+            <input
+              id="title"
+              name="title"
+              class="form-control"
+              type="text"
+              value="<%=datos.title%>"
+            />
+          </div>
+          <div class="form-group col-md-12 col-lg-4">
+            <label for="genre">Género</label>
+            <select id="genre" name="genre" class="form-select"></select>
+            <input
+              type="text"
+              value="<%=datos.genre%>"
+              id="genreValue"
+              class="d-none"
+            />
+          </div>
+          <div class="form-group col-md-12 col-lg-4">
+            <label for="type">Tipo</label>
+            <select
+              onchange="changeType(this)"
+              id="type"
+              name="type"
+              class="form-select"
+            >
+              <option value="movie">Películas</option>
+              <option value="tv">Series</option>
+            </select>
+            <% if (datos.type){ %>
+            <script>
+              document.getElementById("type").value = "<%=datos.type %>";
+            </script>
+            <%} %>
+          </div>
+        </div>
+        <div class="accordion mb-2 dark" id="accordionFilters">
+          <div class="accordion-item dark">
+            <h2 class="accordion-header" id="headingOne">
+              <button
+                class="accordion-button dark"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseOne"
+                aria-expanded="false"
+                aria-controls="collapseOne"
+                style="padding: 5px; padding-left: 10px"
+              >
+                <h4 id="filter">Filtros de busqueda</h4>
+              </button>
+            </h2>
+            <div
+              id="collapseOne"
+              class="accordion-collapse collapse"
+              aria-labelledby="headingOne"
+              data-bs-parent="#accordionFilters"
+            >
+              <div class="accordion-body dark">
+                <div class="row">
+                  <div class="form-group col-md-12 col-lg-4">
+                    <label for="min_vote">Mínimo de votos</label>
+                    <input
+                      id="min_vote"
+                      name="min_vote"
+                      class="form-control"
+                      type="number"
+                      value="<%=datos.min_vote%>"
+                    />
+                  </div>
+                  <div class="form-group col-md-12 col-lg-4">
+                    <label for="min_avg">Valoración mínima</label>
+                    <input
+                      id="min_avg"
+                      min="0"
+                      max="10"
+                      name="min_avg"
+                      class="form-control"
+                      type="number"
+                      value="<%=datos.min_avg%>"
+                    />
+                  </div>
+                  <div class="form-group col-md-12 col-lg-4">
+                    <label for="sort_by">Ordenar por</label>
+                    <select id="sort_by" name="sort_by" class="form-select">
+                      <option value="popularity.desc"></option>
+                      <option value="release_date.desc"></option>
+                      <option value="vote_average.desc"></option>
+                      <option value="vote_count.desc"></option>
+                    </select>
+                    <% if (datos.sort_by){ %>
+                    <script>
+                      document.getElementById("sort_by").value =
+                        "<%=datos.sort_by %>";
+                    </script>
+                    <%} %>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="form-group col-md-12 col-lg-4">
+                    <label for="watchproviders">Plataforma</label>
+                    <select
+                      id="watchproviders"
+                      name="watchproviders"
+                      size="4"
+                      multiple
+                      class="form-select"
+                    >
+                      <option value="">Indiferente</option>
+                      <option value="119">Amazon Prime Video</option>
+                      <option value="350">Apple TV Plus</option>
+                      <option value="337">Disney Plus</option>
+                      <option value="63">Filmin</option>
+                      <option value="384">HBO Max</option>
+                      <option value="8">Netflix</option>
+                      <option value="1773">SkyShowtime</option>
+                      <option value="idc">Cualquiera</option>
+                    </select>
+                    <div class="form-group">
+                      <label for="original">Solo contenido exclusivo</label>
+                      <% if (datos.original=='on' ){ %>
+                      <input
+                        type="checkbox"
+                        id="original"
+                        name="original"
+                        checked
+                      />
+                      <%}else{%>
+                      <input type="checkbox" id="original" name="original" />
+                      <%}%>
+                    </div>
+                    <input
+                      type="text"
+                      id="watchprovidersvalue"
+                      class="d-none"
+                      value="<%=datos.watchproviders%>"
+                    />
+                  </div>
+                  <div class="form-group col-md-12 col-lg-4">
+                    <label for="people">Persona</label>
+                    <input
+                      type="text"
+                      list="peopleList"
+                      value="<%=datos.peopleName%>"
+                      name="peopleName"
+                      class="form-control"
+                      id="people"
+                    />
+                    <datalist id="peopleList">
+                      <option data-value="<%=datos.peopleID%>">
+                        <%=datos.peopleName%>
+                      </option>
+                    </datalist>
+                    <input name="peopleID" class="d-none" type="text" />
+                  </div>
+                  <div class="form-group col-md-12 col-lg-4">
+                    <label for="excludegenre">Excluir Género</label>
+                    <select
+                      id="excludegenre"
+                      name="excludegenre"
+                      class="form-select"
+                    >
+                      <option value="">Ninguno</option>
+                    </select>
+                    <input
+                      type="text"
+                      id="excludeGenreValue"
+                      value="<%=datos.excludegenre%>"
+                      class="d-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <input type="submit" class="btn btn-success" value="Enviar" />
+      </form>
+    </div>
+    <% if(typeof resMovie !='undefined' ){ %>
+    <div class="container mt-2 mb-2">
+      <div class="rounded p-3 dark" id="resultadosDiv">
+        <h1 id="results">Resultados</h1>
+        <div class="accordion dark" id="accordionResults">
+          <%if(!resMovie.results){ resMovie.results=resMovie.cast }%> <%
+          resMovie.results.forEach(result=>{ %>
+          <div class="accordion-item dark">
+            <h2 class="accordion-header" id="heading<%=result.id %>">
+              <button
+                class="accordion-button dark collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse<%=result.id %>"
+                aria-expanded="false"
+                aria-controls="collapse<%=result.id %>"
+              >
+                <%=result.title?result.title:result.name%>
+                <%if(result.release_date||result.first_air_date){%>
+                (<%=(result.release_date?result.release_date:result.first_air_date).split("-")[0]%>)
+                <%}%>
+                <br />
+                <%=result.vote_count%> - <%=result.vote_average%>★
+              </button>
+            </h2>
+            <div
+              id="collapse<%=result.id %>"
+              class="accordion-collapse collapse"
+              aria-labelledby="heading<%=result.id %>"
+              data-bs-parent="#accordionResults"
+            >
+              <div class="accordion-body dark">
+                <div class="row">
+                  <div class="col-lg-9 col-md-6 mb-3 col-sm-7">
+                    <h5><%=result.title?result.title:result.name%></h5>
+                    <h6 class="genres_ids"><%=result.genre_ids%></h6>
+                    <%=result.overview%>
+                    <br />
+                    <%if(result.desviacion<2){%>
+                    <span style="color: yellow"
+                      >Los usuarios suelen votar con la misma nota</span
+                    >
+                    <%}else if(result.desviacion>=3){%>
+                    <span style="color: yellow"
+                      >Las votaciones de los usuarios son muy dispares entre
+                      si</span
+                    >
+                    <%}%> <%if(result.watchProviders){%>
+                    <h5 class="mt-2 whereText">Donde ver</h5>
+                    <%if(result.watchProviders &&result.watchProviders.flatrate
+                    ){%>
+                    <h6 class="suscriptionText">Suscripción</h6>
+                    <div class="row">
+                      <%result.watchProviders.flatrate.forEach(provider=>{%>
+                      <img
+                        class="watch-provider"
+                        src="https://image.tmdb.org/t/p/original/<%=provider.logo_path%>"
+                      />
+                      <%})%>
+                    </div>
+                    <%}%> <%if(result.watchProviders
+                    &&result.watchProviders.free ){%>
+                    <h6 class="freeText">Gratis</h6>
+                    <div class="row">
+                      <%result.watchProviders.free.forEach(provider=> {%>
+                      <img
+                        class="watch-provider"
+                        src="https://image.tmdb.org/t/p/original/<%=provider.logo_path%>"
+                      />
+                      <%})%>
+                    </div>
+                    <%}%> <%if(result.watchProviders
+                    &&result.watchProviders.rent ){%>
+                    <h6 class="rentText">Alquilar</h6>
+                    <div class="row">
+                      <%result.watchProviders.rent.forEach(provider=> {%>
+                      <img
+                        class="watch-provider"
+                        src="https://image.tmdb.org/t/p/original/<%=provider.logo_path%>"
+                      />
+                      <%})%>
+                    </div>
+                    <%}%> <%if(result.watchProviders &&result.watchProviders.buy
+                    ){%>
+                    <h6 class="buyText">Comprar</h6>
+                    <div class="row">
+                      <%result.watchProviders.buy.forEach(provider=> {%>
+                      <img
+                        class="watch-provider"
+                        src="https://image.tmdb.org/t/p/original/<%=provider.logo_path%>"
+                      />
+                      <%})%>
+                    </div>
+                    <%}%> <%}%>
+                  </div>
+                  <div class="col-lg-3 col-md-6 col-sm-5">
+                    <img
+                      class="poster img-thumbnail img-fluid rounded float-right"
+                      src="https://image.tmdb.org/t/p/original<%=result.poster_path%>"
+                    />
+                  </div>
+                  <%if(!result.watchProviders ||
+                  !result.watchProviders.flatrate){%>
+                  <div class="col mt-3">
+                    <button
+                      type="button"
+                      class="btn btn-info"
+                      data-bs-toggle="modal"
+                      data-bs-target="#exampleModal"
+                      onclick="changeModal(this)"
+                    >
+                      🔔 Avísame cuando esté disponible
+                    </button>
+                  </div>
+                  <%}%>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+      <div class="row pageDiv mb-5 mt-3">
+        <div class="col">
+          <%if(resMovie.page>=3){%>
+          <input
+            class="btn btn-primary"
+            id="initPage"
+            onclick="resetPage()"
+            type="button"
+            value="1"
+          />
+          <%}%>
+          <input
+            class="btn btn-primary"
+            id="pageBefore"
+            onclick="changePage(0)"
+            style="float: right"
+            type="button"
+            value="<"
+          />
+        </div>
+        <div class="col">
+          <input
+            id="pageAfter"
+            class="btn btn-primary"
+            onclick="changePage(1)"
+            type="button"
+            value=">"
+          />
+        </div>
+      </div>
+    </div>
+    <% } %>
+    <footer class="m-2">
+      <div id="honorifics" class="mb-2 text-center border rounded dark">
+        <a target="_blank" href="https://twitter.com/profetalimon">
+          Author:<br />
+          Diego Vidal del Rosal</a
+        >
+        <br />
+        <br />
+        <a target="_blank" href="https://twitter.com/mother__north">
+          Collaborators:<br />
+          Aida González Alonso</a
+        >
+        <br />
+        <a target="_blank" href="https://www.instagram.com/_keybunbun_">
+          Ángel Vidal del Rosal</a
+        >
+        <br />
+        <br />
+        <a target="_blank" href="https://github.com/ProphetLemon/moviehunter">
+          Source code (GitHub)</a
+        >
+      </div>
+      <br /><br />
+      <div id="donate-button-container" class="mb-3">
+        <div id="donate-button"></div>
+        <script
+          src="https://www.paypalobjects.com/donate/sdk/donate-sdk.js"
+          charset="UTF-8"
+        ></script>
+        <script>
+          PayPal.Donation.Button({
+            env: "production",
+            hosted_button_id: "4N6A864ZRPSDA",
+            image: {
+              src: "https://www.paypalobjects.com/es_ES/ES/i/btn/btn_donateCC_LG.gif",
+              alt: "Botón Donar con PayPal",
+              title: "PayPal - The safer, easier way to pay online!",
+            },
+          }).render("#donate-button");
+        </script>
+      </div>
+
+      <br />
+      <a href="https://www.themoviedb.org">
+        This website uses the API of The Movie Database
+        <img
+          class="img-thumbnail img-fluid rounded"
+          src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg"
+        />
+      </a>
+    </footer>
+    <!--Modal-->
+    <div
+      class="modal fade"
+      id="exampleModal"
+      tabindex="-1"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+            <button
+              type="button"
+              class="btn-close"
+              onclick="closeModal()"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
+              <symbol
+                id="check-circle-fill"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"
+                />
+              </symbol>
+              <symbol id="info-fill" fill="currentColor" viewBox="0 0 16 16">
+                <path
+                  d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"
+                />
+              </symbol>
+              <symbol
+                id="exclamation-triangle-fill"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"
+                />
+              </symbol>
+            </svg>
+            <div id="alerts"></div>
+            <input type="text" id="mediaID" class="d-none" />
+            <input type="text" id="typeMedia" class="d-none" />
+            <label for="email">Email</label>
+            <input
+              type="text"
+              class="form-control"
+              autocomplete="email"
+              id="email"
+              placeholder="Inserte su email"
+            />
+          </div>
+          <div class="modal-footer">
+            <button
+              id="closeModalButton"
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeModal()"
+              data-bs-dismiss="modal"
+            >
+              Cerrar
+            </button>
+            <button
+              type="button"
+              id="saveModalButton"
+              onclick="sendNotification()"
+              class="btn btn-primary"
+            >
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--JS-->
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
+      crossorigin="anonymous"
+    ></script>
+    <script src="/js/index.js"></script>
+  </body>
+</html>

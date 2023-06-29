@@ -1,0 +1,34 @@
+{
+  "name": "imdb-finder",
+  "version": "1.0.0",
+  "description": "Página web para buscar peliculas y series en función de parametros que inserte el usuario",
+  "main": "index.js",
+  "scripts": {
+    "devStart": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ProphetLemon/imdb-finder.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ProphetLemon/imdb-finder/issues"
+  },
+  "homepage": "https://github.com/ProphetLemon/imdb-finder#readme",
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "ejs": "^3.1.8",
+    "express": "^4.18.2",
+    "mathjs": "^11.8.0",
+    "method-override": "^3.0.0",
+    "mongoose": "^6.5.2",
+    "moviedb-promise": "^3.2.0",
+    "node-fetch": "^3.2.10",
+    "nodemailer": "^6.7.8"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
+}
